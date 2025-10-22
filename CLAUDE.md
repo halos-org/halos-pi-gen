@@ -1,52 +1,83 @@
-# CLAUDE.md
+# HaLOS Image Builder
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This repository builds HaLOS (Hat Labs Operating System) images using pi-gen. For the overall project architecture, see [../CLAUDE.md](../CLAUDE.md).
 
 ## Project Overview
 
-This repository builds customized Raspberry Pi OS images for the HALPI2 hardware (Hat Labs' Raspberry Pi computers). The project uses the official `pi-gen` image builder with custom stage directories to create marine-focused OS images with hardware customizations.
+HaLOS is a Raspberry Pi OS (Trixie) distribution with pre-installed Cockpit and CasaOS web management interfaces. This repository uses the official `pi-gen` image builder with custom stages to create HaLOS images for HALPI2 and generic Raspberry Pi hardware.
 
-The built images include:
-- **Raspios-HALPI2**: Full desktop Raspberry Pi OS with HALPI2 hardware support
-- **Raspios-lite-HALPI2**: Lite/headless Raspberry Pi OS with HALPI2 hardware support
-- **OpenPlotter-HALPI2**: Desktop image with OpenPlotter, SignalK, OpenCPN, and XyGrib pre-installed
+**Key Features:**
+- **Cockpit** (port 9090): Web-based system administration
+- **CasaOS** (port 80/443): Container and app management
+- **Marine variants**: Pre-configured Signal K, InfluxDB, Grafana
+- **HALPI2 support**: Hardware drivers for HALPI2
+
+**Not in this repository:** Legacy OpenPlotter and HALPI (CM4) images are maintained in the separate `openplotter-halpi` repository (Bookworm-based).
+
+## Image Variants
+
+Each variant is defined by a `config.*` file that specifies which stages to include:
+
+| Config File | Image Name | Hardware | Desktop? | Marine? |
+|-------------|------------|----------|----------|---------|
+| `config.halos-marine-halpi2` | HaLOS-Marine-HALPI2 | HALPI2 | Yes | Yes |
+| `config.halos-marine-lite-halpi2` | HaLOS-Marine-Lite-HALPI2 | HALPI2 | No | Yes |
+| `config.halos-halpi2` | HaLOS-HALPI2 | HALPI2 | Yes | No |
+| `config.halos-lite-halpi2` | HaLOS-Lite-HALPI2 | HALPI2 | No | No |
+| `config.halos-marine-rpi` | HaLOS-Marine-RPI | Generic Pi | Yes | Yes |
+| `config.halos-marine-lite-rpi` | HaLOS-Marine-Lite-RPI | Generic Pi | No | Yes |
+| `config.halos-rpi` | HaLOS-RPI | Generic Pi | Yes | No |
+| `config.halos-lite-rpi` | HaLOS-Lite-RPI | Generic Pi | No | No |
+
+**Variant dimensions:**
+- **Hardware**: HALPI2 vs Generic Raspberry Pi
+- **Desktop**: Full desktop environment vs Lite (headless)
+- **Marine**: Pre-installed marine stack vs base system only
 
 ## Build Commands
 
-### Local Development Build
-
-Build all images locally using `act` to simulate GitHub Actions:
+### Quick Start
 
 ```bash
-./run docker-build
-```
+# Build a specific variant
+./run docker-build "HaLOS-Marine-HALPI2"
 
-Build a specific image by job name:
+# Build all enabled variants
+./run docker-build-all
 
-```bash
-./run docker-build-image "Raspios-HALPI2"
-./run docker-build-image "Raspios-lite-HALPI2"
-```
-
-Available job names match the matrix names in `.github/workflows/pull_request.yml`:
-- `Raspios-HALPI2` - Full desktop image
-- `Raspios-lite-HALPI2` - Lite/headless image
-- `OpenPlotter-HALPI2` - OpenPlotter image (when uncommented in workflow)
-
-These commands require:
-- Docker installed and running
-- `act` GitHub Actions local runner installed
-- `gh` CLI tool installed and authenticated
-
-Built image files are placed in the `artifacts/` directory as `.xz` compressed files.
-
-### Clean Docker Containers
-
-Remove lingering pi-gen Docker containers:
-
-```bash
+# Clean up Docker containers
 ./run docker-clean
 ```
+
+### Using act for Local CI Testing
+
+```bash
+# Test PR workflow locally
+act pull_request --container-architecture linux/arm64
+
+# List available workflows
+act -l
+
+# Run specific job
+act pull_request -j build-halos-marine-halpi2
+```
+
+**Requirements:**
+- Docker installed and running
+- [act](https://github.com/nektos/act) for local CI testing (optional)
+- [gh](https://github.com/cli/cli) CLI tool (optional, for workflows)
+- Sufficient disk space (~20GB per variant)
+
+### Build Output
+
+Built images are placed in:
+- Local builds: `deploy/`
+- CI builds: `artifacts/`
+
+Files created:
+- `<variant-name>-<date>.img.xz`: Compressed disk image
+- `<variant-name>-<date>.img.xz.sha256`: Checksum file
+- `build.log`: Detailed build log
 
 ## Architecture
 
@@ -55,51 +86,96 @@ Remove lingering pi-gen Docker containers:
 The project is based on Raspberry Pi's `pi-gen` builder, which uses a stage-based approach. During build:
 
 1. The `pi-gen` repository is cloned (arm64 branch)
-2. Custom stage directories are copied into the `pi-gen/` directory
+2. Custom HaLOS stage directories are copied into `pi-gen/`
 3. A config file is copied to `pi-gen/config`
 4. The pi-gen Docker builder runs with the custom stages
 
 ### Stage System
 
-Stages are processed sequentially. Each stage directory can contain:
-- `prerun.sh`: Runs before the stage
-- `XX-taskname/`: Numbered subdirectories for tasks (executed in order)
-  - `00-run.sh`: Shell script executed on the host system
-  - `01-run-chroot.sh`: Shell script executed inside the chroot
-  - `00-packages`: List of packages to install
-  - `files/`: Files to copy into the image
-- `SKIP`: Marker to skip this stage
-- `SKIP_IMAGES`: Process stage but don't create an image afterward
-- `EXPORT_IMAGE`: Create final image after this stage
+Pi-gen uses a stage-based system where each stage adds functionality. Stages run in alphanumeric order.
 
-### Stage Directories
+#### Standard Pi-Gen Stages
 
-Custom stages in this repository:
+These come from the upstream pi-gen project:
 
-**Common preparation stages:**
-- `stage-pre-halpi2-rpi`: Preparation for Raspberry Pi-based builds
-- `stage-pre-halpi-op`: Preparation for OpenPlotter builds
-- `stage-pre-openplotter`: Additional OpenPlotter preparation
+- **stage0**: Bootstrap - creates minimal Debian root filesystem
+- **stage1**: Base system - adds essential packages and configuration
+- **stage2**: Raspberry Pi OS Lite - minimal bootable system (Trixie)
+- **stage3**: Raspberry Pi OS - adds desktop environment
+- **stage4**: Raspberry Pi OS Full - adds additional applications
+- **stage5**: Raspberry Pi OS Complete - adds even more applications
 
-**OpenPlotter stages:**
-- `stage-openplotter`: Installs OpenPlotter, SignalK, OpenCPN, XyGrib
+#### Custom HaLOS Stages
 
-**HALPI2 customization stages:**
-- `stage-halpi2-common`: Hardware customizations applied to all HALPI2 images:
-  - `00-add-sources`: Adds Hat Labs APT repository
-  - `01-enable-i2c`: Enables I2C interface
-  - `02-add-halpid`: Installs `halpid` package
-  - `03-add-halpi2-firmware`: Installs firmware for HALPI2 hardware
-  - `04-enable-ext-ant`: Configures external antenna support
-  - `05-setup-can`: Configures CAN bus interfaces
-  - `06-setup-rs485`: Configures RS-485 serial interfaces
-  - `07-disable-sd`: Disables SD card to prevent wear
-- `stage-halpi2-rpi`: Desktop-specific customizations (wallpaper)
-- `stage-halpi2-rpi-lite`: Lite/headless-specific customizations
-- `stage-halpi2-op`: OpenPlotter-specific HALPI2 customizations
+##### stage-halos-base/
+**Applies to:** All HaLOS variants
+**Purpose:** Install core web management tools
 
-**Legacy stages:**
-- `stage-halpi`: Original HALPI (non-HALPI2) customizations
+Tasks:
+- **00-install-cockpit/**: Install and configure Cockpit web UI (port 9090)
+  - System monitoring and configuration
+  - Service management
+  - Terminal access
+  - File management
+- **01-install-casaos/**: Install and configure CasaOS (port 80/443)
+  - Docker container management
+  - App store interface
+  - User-friendly web UI
+- **02-configure-services/**: Enable services, configure firewall rules
+
+##### stage-halpi2-common/
+**Applies to:** All HALPI2 variants
+**Purpose:** Hardware-specific customization for HALPI2
+
+Tasks:
+- **00-add-sources/**: Add Hat Labs APT repository (apt.hatlabs.fi)
+- **01-enable-i2c/**: Enable I2C interface
+- **02-add-halpid/**: Install `halpid` hardware daemon package
+- **03-add-halpi2-firmware/**: Install firmware for HALPI2 hardware
+- **04-enable-ext-ant/**: Configure external antenna support
+- **05-setup-can/**: Configure CAN bus interfaces
+- **06-setup-rs485/**: Configure RS-485 serial interfaces
+- **07-disable-sd/**: Disable SD card to prevent wear (boot from USB/NVMe)
+
+##### stage-halos-marine/
+**Applies to:** Marine variants only
+**Purpose:** Pre-configured marine software stack
+
+Tasks:
+- **00-install-docker/**: Install Docker CE and Docker Compose
+- **01-setup-services/**: Deploy Signal K, InfluxDB, Grafana via docker-compose
+  - Files include: `docker-compose.yml`, service configurations
+  - Signal K (port 3000): Marine data hub
+  - InfluxDB (port 8086): Time-series database
+  - Grafana (port 3001): Data visualization
+- **02-configure-casaos-store/**: Enable marine app store for CasaOS
+
+##### stage-halpi2-rpi/
+**Applies to:** HALPI2 desktop variants
+**Purpose:** Desktop-specific HALPI2 customization
+
+Tasks:
+- **00-desktop-config/**: Set wallpaper, theme customizations
+- **01-vnc-config/**: Configure VNC server for remote desktop
+
+### Stage Execution Details
+
+#### Task Numbering
+Within each stage, tasks execute in numeric order (00-, 01-, 02-, etc.).
+
+#### Task Types
+Each task directory can contain:
+- **00-run.sh**: Script executed on build host (outside chroot)
+- **01-run-chroot.sh**: Script executed inside Pi OS filesystem (chroot)
+- **00-packages**: List of apt packages to install (one per line)
+- **00-packages-nr**: Packages to install without recommendations
+- **files/**: Configuration files copied into image
+
+#### Stage Control Files
+- **SKIP**: Place in stage directory to skip the entire stage
+- **SKIP_IMAGES**: Skip creating `.img` file after this stage
+- **EXPORT_IMAGE**: Create `.img` file after this stage completes
+- **EXPORT_NOOBS**: Create NOOBS archive after this stage
 
 ### Configuration Files
 
@@ -110,10 +186,14 @@ Each image variant has a config file that defines:
 - `COMPRESSION_LEVEL`: Compression level (3 or 6)
 - `CONTAINER_NAME`: Docker container name
 
-Active configs:
-- `config.rpi-halpi2`: Full desktop HALPI2 image
-- `config.rpi-lite-halpi2`: Lite/headless HALPI2 image
-- `config.openplotter-halpi2`: OpenPlotter HALPI2 image (currently commented out in CI)
+Example `config.halos-marine-halpi2`:
+```bash
+IMG_NAME="HaLOS-Marine-HALPI2"
+STAGE_LIST="stage0 stage1 stage2 stage-halos-base stage-halpi2-common stage3 stage-halos-marine stage-halpi2-rpi"
+DEPLOY_COMPRESSION="xz"
+COMPRESSION_LEVEL="6"
+CONTAINER_NAME="pigen_work_halos_marine_halpi2"
+```
 
 ### CI/CD Workflows
 
@@ -124,9 +204,35 @@ Active configs:
 - Uses `pi-gen`'s `arm64` branch with `build-docker.sh`
 
 **`.github/workflows/release.yml`**: Creates GitHub releases
-- Triggers on pushes to `main` branch
+- Triggers on pushes to `main` branch or manual dispatch
 - Downloads artifacts from the last successful PR workflow run
-- Creates a draft GitHub release with all image files
+- Creates a GitHub release with all image files
+- Generates release notes
+
+## Creating New Image Variants
+
+1. **Create config file**: `config.halos-new-variant`
+
+   ```bash
+   # Example: HaLOS Marine variant for HALPI2
+   IMG_NAME="HaLOS-Marine-HALPI2"
+   STAGE_LIST="stage0 stage1 stage2 stage-halos-base stage-halpi2-common stage3 stage-halos-marine stage-halpi2-rpi"
+   DEPLOY_COMPRESSION="xz"
+   COMPRESSION_LEVEL="6"
+   CONTAINER_NAME="pigen_work_halos_marine_halpi2"
+   ```
+
+2. **Define stage list**:
+   - Start with base pi-gen stages: `stage0 stage1 stage2`
+   - Add `stage-halos-base` for Cockpit and CasaOS (required for all HaLOS)
+   - Add `stage-halpi2-common` if targeting HALPI2 hardware
+   - Add `stage3` for desktop environment (omit for Lite variants)
+   - Add `stage-halos-marine` for marine software stack
+   - Add `stage-halpi2-rpi` for HALPI2 desktop customizations
+
+3. **Add to CI/CD**: Update `.github/workflows/pull_request.yml` matrix
+
+4. **Test locally**: `./run docker-build "HaLOS-Marine-HALPI2"`
 
 ## Common Development Patterns
 
@@ -137,17 +243,41 @@ Active configs:
 3. Use `${ROOTFS_DIR}` to reference the root filesystem when writing from host scripts
 4. Use `on_chroot << EOF` heredocs in `00-run.sh` to run commands inside the chroot
 
+Example structure:
+```bash
+stage-halpi2-common/
+└── 08-new-task/
+    ├── 00-packages          # Optional: packages to install
+    ├── 01-run-chroot.sh     # Script runs inside chroot
+    └── files/               # Optional: files to copy
+        └── config.conf
+```
+
 ### Installing Packages
 
-Create a `00-packages` file in the task directory with one package name per line. The pi-gen system will automatically install these packages.
+Create a `00-packages` file in the task directory with one package name per line.
+
+Example `00-packages`:
+```
+vim
+htop
+tmux
+```
 
 ### Modifying Config Files
 
-Place configuration files in a `files/` subdirectory within the task directory. Use scripts to copy or append them to the appropriate locations in `${ROOTFS_DIR}`.
+Place configuration files in a `files/` subdirectory within the task directory.
 
-### Testing Changes
+Example `01-run-chroot.sh`:
+```bash
+#!/bin/bash -e
 
-When modifying stages, test locally with `./run docker-build` before pushing. Note that full builds can take significant time (30+ minutes depending on hardware).
+# Copy config file
+install -m 644 files/config.conf "${ROOTFS_DIR}/etc/myapp/config.conf"
+
+# Append to existing file
+cat files/additional.conf >> "${ROOTFS_DIR}/etc/myapp/main.conf"
+```
 
 ### Working with pi-gen Variables
 
@@ -155,3 +285,128 @@ Key pi-gen environment variables available in stage scripts:
 - `${ROOTFS_DIR}`: Path to the root filesystem being built
 - `${STAGE_DIR}`: Current stage directory
 - `IMG_NAME`, `IMG_DATE`: Image naming variables from config
+
+### Testing Changes
+
+For faster iteration during development:
+1. **Disable unnecessary stages**: Add `SKIP` files to stages you're not testing
+2. **Use smaller base**: Start from stage2 instead of stage0 when possible
+3. **Test specific tasks**: Manually run task scripts in chroot for quick validation
+
+Full builds take 30+ minutes depending on hardware.
+
+## Modifying Existing Stages
+
+### Adding Hardware Support (HALPI2)
+Edit tasks in `stage-halpi2-common/`. Changes automatically affect all HALPI2 variants.
+
+Example: Adding new hardware interface
+```bash
+cd stage-halpi2-common/08-new-interface
+# Create 01-run-chroot.sh to enable new interface
+```
+
+### Modifying Web Management
+Edit tasks in `stage-halos-base/`.
+
+Example: Changing Cockpit configuration
+```bash
+cd stage-halos-base/00-install-cockpit
+# Edit files/cockpit.conf or 01-run-chroot.sh
+```
+
+### Adding Marine Services
+
+**Option 1: Pre-installed service** (recommended for core services)
+```bash
+cd stage-halos-marine/01-setup-services/files
+# Edit docker-compose.yml to add new service
+```
+
+**Option 2: CasaOS app store** (recommended for optional apps)
+Add app to the separate `casaos-marine-store/` repository. See [../casaos-marine-store/CLAUDE.md](../casaos-marine-store/CLAUDE.md).
+
+## Troubleshooting
+
+### Build Fails in Stage
+- Check `deploy/build.log` for detailed error messages
+- Look for failed package installations
+- Verify network connectivity for package downloads
+- Check disk space (builds need ~20GB)
+
+### Docker Issues
+```bash
+# Clean up failed builds
+./run docker-clean
+
+# Remove all build artifacts
+rm -rf deploy/ work/
+
+# Reset Docker environment
+docker system prune -af
+```
+
+### Chroot Debugging
+To debug issues inside the build environment:
+
+```bash
+# Enter the chroot manually
+sudo chroot work/<stage-name>/rootfs /bin/bash
+
+# Test package installation
+apt-get update
+apt-get install <package-name>
+```
+
+### Common Issues
+
+**Issue:** `E: Unable to locate package`
+**Solution:** Ensure APT repository is added in earlier stage, run `apt-get update`
+
+**Issue:** Stage scripts fail with permission errors
+**Solution:** Ensure scripts have executable permissions (`chmod +x`)
+
+**Issue:** Out of disk space
+**Solution:** Clean up old builds, increase disk space, or reduce number of concurrent builds
+
+## Best Practices
+
+### Stage Organization
+- Keep stages focused on a single responsibility
+- Use descriptive task names (00-install-foo, 01-configure-foo)
+- Document complex scripts with comments
+- Test stages independently when possible
+
+### Configuration Management
+- Use `files/` directories for configuration files
+- Avoid hardcoding paths - use variables
+- Make configurations conditional on variant type when appropriate
+
+### Package Installation
+- Prefer `.deb` packages from apt repositories
+- Use `00-packages` files for simple package lists
+- Use chroot scripts for complex installation logic
+- Pin package versions for reproducible builds (when needed)
+
+### Docker Compose Services
+- Use persistent volumes for data
+- Set restart policies appropriately
+- Document port mappings
+- Include health checks
+
+## File Locations Reference
+
+- **Config files**: `config.*`
+- **Stage directories**: `stage-*/`
+- **Build script**: `./run`
+- **Build output**: `deploy/` or `artifacts/`
+- **Build workspace**: `work/` (temporary)
+- **CI workflows**: `.github/workflows/`
+
+## Related Documentation
+
+- **Parent project**: [../CLAUDE.md](../CLAUDE.md) - Overall HaLOS architecture
+- **CasaOS**: [../casaos-docker-service/CLAUDE.md](../casaos-docker-service/CLAUDE.md) - CasaOS deployment
+- **Marine apps**: [../casaos-marine-store/CLAUDE.md](../casaos-marine-store/CLAUDE.md) - App store content
+- **Pi-gen upstream**: https://github.com/RPi-Distro/pi-gen
+- **Legacy images**: `openplotter-halpi` repository - OpenPlotter and HALPI (CM4) images (Bookworm)
