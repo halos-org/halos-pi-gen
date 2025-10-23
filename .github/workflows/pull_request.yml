@@ -29,7 +29,7 @@ jobs:
             config: config.rpi-halpi2
             release: trixie
             filename_prefix: raspios-halpi2
-            enabled: true
+            enabled: false
           - name: OpenPlotter-HALPI2
             config: config.openplotter-halpi2
             release: bookworm
@@ -39,6 +39,11 @@ jobs:
             config: config.rpi-lite-halpi2
             release: trixie
             filename_prefix: raspios-lite-halpi2
+            enabled: false
+          - name: HaLOS-HALPI2
+            config: config.halos-halpi2
+            release: trixie
+            filename_prefix: halos-halpi2
             enabled: true
 
     steps:
@@ -69,8 +74,7 @@ jobs:
         run: |
           cp -R stage-* pi-gen/
           touch pi-gen/stage5/SKIP
-          touch pi-gen/stage{2,4,-openplotter}/SKIP_IMAGES
-          touch pi-gen/stage-halpi/EXPORT_IMAGE
+          touch pi-gen/stage{2,4}/SKIP_IMAGES
           cp ${{ matrix.config }} pi-gen/config
           cd pi-gen
           sudo RELEASE='${{ matrix.release }}' IMG_FILENAME=${{ env.IMG_FILENAME }} ARCHIVE_FILENAME=${{ env.IMG_FILENAME }} ./build-docker.sh
