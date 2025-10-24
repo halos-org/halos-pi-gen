@@ -30,10 +30,10 @@ jobs:
             release: trixie
             filename_prefix: raspios-lite-halpi2
             enabled: false
-          - name: HaLOS-HALPI2
+          - name: Halos-Desktop-HALPI2
             config: config.halos-halpi2
             release: trixie
-            filename_prefix: halos-halpi2
+            filename_prefix: halos-desktop-halpi2
             enabled: true
 
     steps:

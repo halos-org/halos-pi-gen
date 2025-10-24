@@ -3,12 +3,22 @@
 Raspberry Pi OS images customized for the HALPI2 hardware.
 
 The built images include:
-- Raspberry Pi OS Lite with HALPI2 customizations
-- Raspberry Pi OS with Desktop and HALPI2 customizations
-- HaLOS: Containerized Raspberry Pi OS for HALPI2 with common marine applications pre-installed
-- HaLOS-Lite: Containerized Raspberry Pi OS Lite for HALPI2 with common marine applications pre-installed
-- HaLOS-Generic: Containerized Raspberry Pi OS for generic Raspberry Pi hardware with common marine applications pre-installed
-- HaLOS-Generic-Lite: Containerized Raspberry Pi OS Lite for generic Raspberry Pi hardware with common marine applications pre-installed
+
+**Stock Raspberry Pi OS (HALPI2-customized):**
+- Raspios-lite-HALPI2: Headless Raspberry Pi OS with HALPI2 drivers
+- Raspios-HALPI2: Desktop Raspberry Pi OS with HALPI2 drivers
+
+**Halos Images** (Cockpit + CasaOS web management):
+- Halos-HALPI2: Headless for HALPI2 hardware
+- Halos-Desktop-HALPI2: Desktop for HALPI2 hardware
+- Halos-RPI: Headless for generic Raspberry Pi
+- Halos-Desktop-RPI: Desktop for generic Raspberry Pi
+
+**Halos Marine Images** (adds Signal K, InfluxDB, Grafana):
+- Halos-Marine-HALPI2: Headless marine for HALPI2
+- Halos-Desktop-Marine-HALPI2: Desktop marine for HALPI2
+- Halos-Marine-RPI: Headless marine for generic Raspberry Pi
+- Halos-Desktop-Marine-RPI: Desktop marine for generic Raspberry Pi
 
 ## Downloading the Images
 
