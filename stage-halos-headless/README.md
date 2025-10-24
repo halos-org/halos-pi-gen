@@ -16,7 +16,7 @@ This stage contains configurations specific to headless Halos variants that need
 
 **Default Settings:**
 - **SSID:** Halos-HALPI2
-- **Password:** halos123
+- **Password:** halos1234
 - **Interface:** wlan9 (virtual AP interface)
 - **IP Range:** Managed by NetworkManager (shared method)
 
