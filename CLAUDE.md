@@ -1,10 +1,20 @@
-# HaLOS Image Builder
+# Halos Image Builder
 
-This repository builds HaLOS (Hat Labs Operating System) images using pi-gen. For the overall project architecture, see [../CLAUDE.md](../CLAUDE.md).
+This repository builds Halos (Hat Labs Operating System) images using pi-gen. For the overall project architecture, see [../CLAUDE.md](../CLAUDE.md).
+
+**pi-gen Documentation:** https://raw.githubusercontent.com/RPi-Distro/pi-gen/refs/heads/master/README.md
+
+## Git Workflow Policy
+
+**IMPORTANT:** Always ask the user before:
+- Committing files to git
+- Pushing commits to remote repositories
+- Creating or modifying git tags
+- Running destructive git operations
 
 ## Project Overview
 
-HaLOS is a Raspberry Pi OS (Trixie) distribution with pre-installed Cockpit and CasaOS web management interfaces. This repository uses the official `pi-gen` image builder with custom stages to create HaLOS images for HALPI2 and generic Raspberry Pi hardware.
+Halos is a Raspberry Pi OS (Trixie) distribution with pre-installed Cockpit and CasaOS web management interfaces. This repository uses the official `pi-gen` image builder with custom stages to create Halos images for HALPI2 and generic Raspberry Pi hardware.
 
 **Key Features:**
 - **Cockpit** (port 9090): Web-based system administration
@@ -14,33 +24,61 @@ HaLOS is a Raspberry Pi OS (Trixie) distribution with pre-installed Cockpit and 
 
 **Not in this repository:** Legacy OpenPlotter and HALPI (CM4) images are maintained in the separate `openplotter-halpi` repository (Bookworm-based).
 
+## ⚠️ CRITICAL: Offline Operation Requirement
+
+**IMPORTANT:** Halos is designed for marine environments where **internet connectivity may NOT be available during first boot**.
+
+**Mandatory Requirements:**
+1. **All Docker images required for first boot MUST be pre-loaded** in the built image
+2. **No network connectivity can be assumed** on first boot
+3. **All core services must be operational** without internet access
+
+This currently applies to:
+- **CasaOS Docker image** (`dockurr/casa:X.Y.Z`) - required by casaos-docker-service package
+
 ## Image Variants
 
-Each variant is defined by a `config.*` file that specifies which stages to include:
+Each variant is defined by a `config.*` file that specifies which stages to include.
+
+### Stock Raspberry Pi OS (HALPI2-customized)
+
+| Config File | Image Name | Desktop? |
+|-------------|------------|----------|
+| `config.rpi-lite-halpi2` | Raspios-lite-HALPI2 | No |
+| `config.rpi-halpi2` | Raspios-HALPI2 | Yes |
+
+These are stock Raspberry Pi OS images with HALPI2 hardware drivers pre-installed.
+
+### Halos Images
+
+**Halos uses headless-first naming:** Base images are headless. Desktop variants add `-Desktop-` to the name.
 
 | Config File | Image Name | Hardware | Desktop? | Marine? |
 |-------------|------------|----------|----------|---------|
-| `config.halos-marine-halpi2` | HaLOS-Marine-HALPI2 | HALPI2 | Yes | Yes |
-| `config.halos-marine-lite-halpi2` | HaLOS-Marine-Lite-HALPI2 | HALPI2 | No | Yes |
-| `config.halos-halpi2` | HaLOS-HALPI2 | HALPI2 | Yes | No |
-| `config.halos-lite-halpi2` | HaLOS-Lite-HALPI2 | HALPI2 | No | No |
-| `config.halos-marine-rpi` | HaLOS-Marine-RPI | Generic Pi | Yes | Yes |
-| `config.halos-marine-lite-rpi` | HaLOS-Marine-Lite-RPI | Generic Pi | No | Yes |
-| `config.halos-rpi` | HaLOS-RPI | Generic Pi | Yes | No |
-| `config.halos-lite-rpi` | HaLOS-Lite-RPI | Generic Pi | No | No |
+| `config.halos-halpi2` | Halos-Desktop-HALPI2 | HALPI2 | Yes | No |
+| `config.halos-lite-halpi2` | Halos-HALPI2 | HALPI2 | No | No |
+| `config.halos-marine-halpi2` | Halos-Desktop-Marine-HALPI2 | HALPI2 | Yes | Yes |
+| `config.halos-marine-lite-halpi2` | Halos-Marine-HALPI2 | HALPI2 | No | Yes |
+| `config.halos-rpi` | Halos-Desktop-RPI | Generic Pi | Yes | No |
+| `config.halos-lite-rpi` | Halos-RPI | Generic Pi | No | No |
+| `config.halos-marine-rpi` | Halos-Desktop-Marine-RPI | Generic Pi | Yes | Yes |
+| `config.halos-marine-lite-rpi` | Halos-Marine-RPI | Generic Pi | No | Yes |
 
-**Variant dimensions:**
-- **Hardware**: HALPI2 vs Generic Raspberry Pi
-- **Desktop**: Full desktop environment vs Lite (headless)
-- **Marine**: Pre-installed marine stack vs base system only
+**Naming Convention:**
+- Headless (default): `Halos-[Marine-]<Hardware>`
+- Desktop variants: `Halos-Desktop-[Marine-]<Hardware>`
+- Hardware suffix: `-HALPI2` or `-RPI`
 
 ## Build Commands
 
 ### Quick Start
 
 ```bash
-# Build a specific variant
-./run docker-build "HaLOS-Marine-HALPI2"
+# Build a specific variant (headless marine)
+./run docker-build "Halos-Marine-HALPI2"
+
+# Build desktop marine variant
+./run docker-build "Halos-Desktop-Marine-HALPI2"
 
 # Build all enabled variants
 ./run docker-build-all
@@ -86,7 +124,7 @@ Files created:
 The project is based on Raspberry Pi's `pi-gen` builder, which uses a stage-based approach. During build:
 
 1. The `pi-gen` repository is cloned (arm64 branch)
-2. Custom HaLOS stage directories are copied into `pi-gen/`
+2. Custom Halos stage directories are copied into `pi-gen/`
 3. A config file is copied to `pi-gen/config`
 4. The pi-gen Docker builder runs with the custom stages
 
@@ -105,10 +143,10 @@ These come from the upstream pi-gen project:
 - **stage4**: Raspberry Pi OS Full - adds additional applications
 - **stage5**: Raspberry Pi OS Complete - adds even more applications
 
-#### Custom HaLOS Stages
+#### Custom Halos Stages
 
 ##### stage-halos-base/
-**Applies to:** All HaLOS variants
+**Applies to:** All Halos variants
 **Purpose:** Install core web management tools
 
 Tasks:
@@ -186,9 +224,18 @@ Each image variant has a config file that defines:
 - `COMPRESSION_LEVEL`: Compression level (3 or 6)
 - `CONTAINER_NAME`: Docker container name
 
-Example `config.halos-marine-halpi2`:
+Example `config.halos-marine-lite-halpi2` (headless marine):
 ```bash
-IMG_NAME="HaLOS-Marine-HALPI2"
+IMG_NAME="Halos-Marine-HALPI2"
+STAGE_LIST="stage0 stage1 stage2 stage-halos-base stage-halpi2-common stage-halos-marine"
+DEPLOY_COMPRESSION="xz"
+COMPRESSION_LEVEL="6"
+CONTAINER_NAME="pigen_work_halos_marine_lite_halpi2"
+```
+
+Example `config.halos-marine-halpi2` (desktop marine):
+```bash
+IMG_NAME="Halos-Desktop-Marine-HALPI2"
 STAGE_LIST="stage0 stage1 stage2 stage-halos-base stage-halpi2-common stage3 stage-halos-marine stage-halpi2-rpi"
 DEPLOY_COMPRESSION="xz"
 COMPRESSION_LEVEL="6"
@@ -214,8 +261,8 @@ CONTAINER_NAME="pigen_work_halos_marine_halpi2"
 1. **Create config file**: `config.halos-new-variant`
 
    ```bash
-   # Example: HaLOS Marine variant for HALPI2
-   IMG_NAME="HaLOS-Marine-HALPI2"
+   # Example: Halos Marine variant for HALPI2
+   IMG_NAME="Halos-Marine-HALPI2"
    STAGE_LIST="stage0 stage1 stage2 stage-halos-base stage-halpi2-common stage3 stage-halos-marine stage-halpi2-rpi"
    DEPLOY_COMPRESSION="xz"
    COMPRESSION_LEVEL="6"
@@ -224,7 +271,7 @@ CONTAINER_NAME="pigen_work_halos_marine_halpi2"
 
 2. **Define stage list**:
    - Start with base pi-gen stages: `stage0 stage1 stage2`
-   - Add `stage-halos-base` for Cockpit and CasaOS (required for all HaLOS)
+   - Add `stage-halos-base` for Cockpit and CasaOS (required for all Halos)
    - Add `stage-halpi2-common` if targeting HALPI2 hardware
    - Add `stage3` for desktop environment (omit for Lite variants)
    - Add `stage-halos-marine` for marine software stack
@@ -232,7 +279,7 @@ CONTAINER_NAME="pigen_work_halos_marine_halpi2"
 
 3. **Add to CI/CD**: Update `.github/workflows/pull_request.yml` matrix
 
-4. **Test locally**: `./run docker-build "HaLOS-Marine-HALPI2"`
+4. **Test locally**: `./run docker-build "Halos-Marine-HALPI2"`
 
 ## Common Development Patterns
 
@@ -405,7 +452,7 @@ apt-get install <package-name>
 
 ## Related Documentation
 
-- **Parent project**: [../CLAUDE.md](../CLAUDE.md) - Overall HaLOS architecture
+- **Parent project**: [../CLAUDE.md](../CLAUDE.md) - Overall Halos architecture
 - **CasaOS**: [../casaos-docker-service/CLAUDE.md](../casaos-docker-service/CLAUDE.md) - CasaOS deployment
 - **Marine apps**: [../casaos-marine-store/CLAUDE.md](../casaos-marine-store/CLAUDE.md) - App store content
 - **Pi-gen upstream**: https://github.com/RPi-Distro/pi-gen

@@ -1,6 +1,6 @@
 # stage-halos-base
 
-This stage installs the core HaLOS components that are included in all HaLOS variants (both marine and non-marine, desktop and lite).
+This stage installs the core Halos components that are included in all Halos variants (both marine and non-marine, desktop and lite).
 
 ## Components Installed
 
@@ -65,7 +65,7 @@ After this stage, the following services are enabled but not yet started:
 - **cockpit.socket** - Cockpit web interface (port 9090)
 - **casaos.service** - CasaOS container management (port 80)
 
-Services will start on first boot of the HaLOS system.
+Services will start on first boot of the Halos system.
 
 ## Network Requirements
 
@@ -79,12 +79,12 @@ After the build is complete, the system can boot and run without network connect
 
 ## Applies To
 
-This stage is included in all HaLOS image variants:
-- HaLOS-HALPI2 (desktop)
-- HaLOS-Lite-HALPI2 (headless)
-- HaLOS-RPI (desktop, generic Pi)
-- HaLOS-Lite-RPI (headless, generic Pi)
-- HaLOS-Marine-* variants (all with additional stage-halos-marine)
+This stage is included in all Halos image variants:
+- Halos-HALPI2 (desktop)
+- Halos-Lite-HALPI2 (headless)
+- Halos-RPI (desktop, generic Pi)
+- Halos-Lite-RPI (headless, generic Pi)
+- Halos-Marine-* variants (all with additional stage-halos-marine)
 
 ## Stage Order
 
