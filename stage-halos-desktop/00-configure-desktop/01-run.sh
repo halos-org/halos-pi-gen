@@ -1,0 +1,24 @@
+#!/bin/bash -e
+
+# Install logo files
+install -m 644 files/runtipi-logo.png "${ROOTFS_DIR}/usr/share/pixmaps/"
+install -m 644 files/cockpit-logo.png "${ROOTFS_DIR}/usr/share/pixmaps/"
+
+# Install desktop launchers to system applications directory
+install -m 644 files/runtipi.desktop "${ROOTFS_DIR}/usr/share/applications/"
+install -m 644 files/cockpit.desktop "${ROOTFS_DIR}/usr/share/applications/"
+
+# Create user's wf-panel-pi config directory
+install -v -o 1000 -g 1000 -d "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/.config"
+install -v -o 1000 -g 1000 -d "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/.config/wf-panel-pi"
+
+# Configure panel launchers
+PANEL_CONFIG="${ROOTFS_DIR}/home/${FIRST_USER_NAME}/.config/wf-panel-pi/wf-panel-pi.ini"
+
+if [ -f "${PANEL_CONFIG}" ]; then
+    # File exists, append cockpit and runtipi to existing launchers
+    sed -i 's/^\(launchers=.*\)$/\1 cockpit runtipi/' "${PANEL_CONFIG}"
+else
+    # File doesn't exist, install default configuration
+    install -m 644 -o 1000 -g 1000 files/wf-panel-pi.ini "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/.config/wf-panel-pi/"
+fi
