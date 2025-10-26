@@ -16,8 +16,14 @@ install -v -o 1000 -g 1000 -d "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/.config/wf-
 PANEL_CONFIG="${ROOTFS_DIR}/home/${FIRST_USER_NAME}/.config/wf-panel-pi/wf-panel-pi.ini"
 
 if [ -f "${PANEL_CONFIG}" ]; then
-    # File exists, append cockpit and runtipi to existing launchers
-    sed -i 's/^\(launchers=.*\)$/\1 cockpit runtipi/' "${PANEL_CONFIG}"
+    # File exists, validate and update launchers line
+    if grep -Eq '^[[:space:]]*launchers[[:space:]]*=' "${PANEL_CONFIG}"; then
+        # Update the launchers line, allowing for spaces around '='
+        sed -i -E 's/^([[:space:]]*launchers[[:space:]]*=[[:space:]]*)(.*)$/\1\2 cockpit runtipi/' "${PANEL_CONFIG}"
+    else
+        # Add launchers line if it does not exist
+        echo "launchers=cockpit runtipi" >> "${PANEL_CONFIG}"
+    fi
 else
     # File doesn't exist, install default configuration
     install -m 644 -o 1000 -g 1000 files/wf-panel-pi.ini "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/.config/wf-panel-pi/"

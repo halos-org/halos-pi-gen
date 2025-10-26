@@ -4,6 +4,6 @@ Type=Application
 Name=Cockpit
 Comment=HaLOS System Management
 Icon=/usr/share/pixmaps/cockpit-logo.png
-Exec=xdg-open https://halpi2.local:9090/
+Exec=xdg-open https://localhost:9090/
 Terminal=false
 Categories=System;Settings;
