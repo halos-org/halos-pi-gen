@@ -1,33 +1,48 @@
 #!/bin/bash -e
 
-# This script downloads Docker images without requiring the Docker daemon
-# Uses skopeo to pull images from Docker Hub and convert to docker-archive format
+# This runs on the build host (pi-gen Docker container)
+# Pre-pull the Runtipi Docker images using skopeo and save them to the image
+# Skopeo works without a Docker daemon, so it works in restricted build environments
 
-# Check if skopeo is available
-if ! command -v skopeo &> /dev/null; then
-    echo "skopeo not found, installing..."
-    apt-get update && apt-get install -y skopeo
-fi
+# Extract versions from the docker-compose.yml
+RUNTIPI_VERSION=$(grep 'image: ghcr.io/runtipi/runtipi:' "${ROOTFS_DIR}/opt/runtipi/docker-compose.yml" | sed 's/.*ghcr.io\/runtipi\/runtipi://' | tr -d ' ')
+TRAEFIK_VERSION=$(grep 'image: traefik:' "${ROOTFS_DIR}/opt/runtipi/docker-compose.yml" | sed 's/.*traefik://' | tr -d ' ')
+POSTGRES_VERSION=$(grep 'image: postgres:' "${ROOTFS_DIR}/opt/runtipi/docker-compose.yml" | sed 's/.*postgres://' | tr -d ' ')
 
-# Extract version from the docker-compose.yml
-CASA_VERSION=$(grep 'image: dockurr/casa:' "${ROOTFS_DIR}/opt/casa/docker-compose.yml" | sed 's/.*dockurr\/casa://' | tr -d ' ')
-
-if [ -z "$CASA_VERSION" ]; then
-    echo "ERROR: Could not determine CasaOS version from docker-compose.yml"
+if [ -z "$RUNTIPI_VERSION" ] || [ -z "$TRAEFIK_VERSION" ] || [ -z "$POSTGRES_VERSION" ]; then
+    echo "ERROR: Could not determine image versions from docker-compose.yml"
     exit 1
 fi
 
-echo "Downloading dockurr/casa:$CASA_VERSION using skopeo..."
+# Install skopeo if not available
+if ! command -v skopeo &> /dev/null; then
+    echo "skopeo not found, installing..."
+    apt-get update
+    apt-get install -y skopeo
+fi
 
-# Create output directory
-mkdir -p "${ROOTFS_DIR}/opt/casa/images"
+echo "Pre-pulling Runtipi Docker images using skopeo..."
 
-# Use skopeo to copy the image from Docker Hub to a docker-archive tar file
-# This works without the Docker daemon and creates a tar that 'docker load' can read
-skopeo copy \
-    --override-arch=arm64 \
-    docker://docker.io/dockurr/casa:${CASA_VERSION} \
-    docker-archive:${ROOTFS_DIR}/opt/casa/images/casa-${CASA_VERSION}.tar:dockurr/casa:${CASA_VERSION}
+# Define images to pull
+declare -A IMAGES=(
+    ["runtipi"]="docker://ghcr.io/runtipi/runtipi:$RUNTIPI_VERSION"
+    ["traefik"]="docker://traefik:$TRAEFIK_VERSION"
+    ["postgres"]="docker://postgres:$POSTGRES_VERSION"
+    ["lavinmq"]="docker://cloudamqp/lavinmq:latest"
+)
 
-echo "Successfully downloaded dockurr/casa:$CASA_VERSION to /opt/casa/images/"
-ls -lh "${ROOTFS_DIR}/opt/casa/images/"
+# Create directory for image tarballs
+mkdir -p "${ROOTFS_DIR}/opt/runtipi/images"
+
+# Pull and save each image using skopeo
+for NAME in "${!IMAGES[@]}"; do
+    IMAGE="${IMAGES[$NAME]}"
+    echo "Pulling $IMAGE using skopeo..."
+
+    # Use skopeo to copy the image directly to docker-archive format
+    skopeo copy "$IMAGE" "docker-archive:${ROOTFS_DIR}/opt/runtipi/images/${NAME}.tar"
+
+    echo "Saved to /opt/runtipi/images/${NAME}.tar"
+done
+
+echo "Successfully saved all Runtipi images to /opt/runtipi/images/"
