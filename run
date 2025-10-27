@@ -31,12 +31,12 @@ readonly SCRIPT="$PROJECT_ROOT/$(basename "$0")"
 ################################################################################
 # Project-specific commands follow.
 
-function docker-build-all {
+function docker:build-all {
   # Build all images in the matrix
-  # Usage: ./run docker-build-all [additional act options]
+  # Usage: ./run docker:build-all [additional act options]
 
   # Clean up any existing pigen_work containers first
-  docker-clean
+  docker:clean
 
   act \
     pull_request \
@@ -46,9 +46,9 @@ function docker-build-all {
     "$@"
 }
 
-function docker-build {
+function docker:build {
   # Build a specific image by job name
-  # Usage: ./run docker-build <job-name> [additional act options]
+  # Usage: ./run docker:build <job-name> [additional act options]
   # Available job names:
   #   - "Raspios-HALPI2"
   #   - "Raspios-lite-HALPI2"
@@ -56,7 +56,7 @@ function docker-build {
 
   if [ $# -lt 1 ]; then
     echo "Error: Job name required"
-    echo "Usage: ./run docker-build <job-name>"
+    echo "Usage: ./run docker:build <job-name>"
     echo ""
     echo "Available jobs:"
     echo "  - Raspios-HALPI2"
@@ -69,7 +69,7 @@ function docker-build {
   shift
 
   # Clean up any existing pigen_work containers first
-  docker-clean
+  docker:clean
 
   act \
     pull_request \
@@ -80,7 +80,7 @@ function docker-build {
     "$@"
 }
 
-function docker-clean {
+function docker:clean {
   docker rm -v $(docker ps -a --filter "name=pigen_work" --format "{{.Names}}") 2>/dev/null || true
 }
 
