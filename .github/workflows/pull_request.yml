@@ -22,12 +22,12 @@ jobs:
           - name: Raspios-HALPI2
             config: config.raspios-halpi2
             release: trixie
-            filename_prefix: raspios-halpi2
+            filename_prefix: Raspios-HALPI2
             enabled: true
-          - name: Raspios-lite-HALPI2
+          - name: Raspios-Lite-HALPI2
             config: config.raspios-lite-halpi2
             release: trixie
-            filename_prefix: raspios-lite-halpi2
+            filename_prefix: Raspios-Lite-HALPI2
             enabled: true
           - name: Halos-HALPI2
             config: config.halos-halpi2
