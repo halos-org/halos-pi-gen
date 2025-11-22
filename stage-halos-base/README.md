@@ -1,105 +1,39 @@
 # stage-halos-base
 
-This stage installs the core Halos components that are included in all Halos variants (both marine and non-marine, desktop and lite).
+This stage installs the core HaLOS components that are included in all HaLOS variants.
 
-## Components Installed
+## What it Does
 
-### 00-install-docker
-Installs Docker CE from the official Docker repository following [Docker's official documentation](https://docs.docker.com/engine/install/debian/).
+Installs the `halos` metapackage from apt.hatlabs.fi, which provides:
 
-**Packages installed:**
-- docker-ce
-- docker-ce-cli
-- containerd.io
-- docker-buildx-plugin
-- docker-compose-plugin
+- **Docker** (docker.io, docker-compose, docker-cli)
+- **Cockpit** web-based system administration (port 9090)
+  - cockpit-networkmanager (network management)
+  - cockpit-storaged (storage management)
+  - cockpit-apt (package management)
+  - cockpit-dockermanager (Docker container management)
+  - cockpit-branding-halos (HaLOS branding)
 
-**What it does:**
-- Adds Docker's official GPG key
-- Adds Docker APT repository
-- Installs Docker CE and plugins
-- Enables Docker service
+## Structure
 
-### 01-install-cockpit
-Installs Cockpit web-based system administration interface.
-
-**Packages installed:**
-- cockpit (core web interface)
-- cockpit-docker (Docker container management)
-- cockpit-networkmanager (network management)
-- cockpit-storaged (storage management)
-
-**What it does:**
-- Installs Cockpit packages
-- Enables cockpit.socket service
-- Web UI available on port 9090 after first boot
-
-### 02-install-runtipi
-Installs the Runtipi containerized service from the Hat Labs APT repository.
-
-**Packages installed:**
-- runtipi-docker-service (from apt.hatlabs.fi)
-
-**What it does:**
-- Installs runtipi-docker-service package
-- Creates /opt/runtipi directory (via package postinst)
-- Installs docker-compose.yml to /opt/runtipi/
-- Installs runtipi.service systemd unit
-- Enables runtipi.service for first boot
-- Stops service during build (will start on first boot)
-- Web UI available on port 80 after first boot
-
-### 03-pull-images
-Pre-pulls Docker images required by Runtipi to enable offline first boot.
-
-**What it does:**
-- Reads image versions from /opt/runtipi/docker-compose.yml
-- Uses skopeo to pull Runtipi Docker images (ghcr.io/runtipi/runtipi, traefik, postgres, cloudamqp/lavinmq)
-- Saves images as tar files in docker-archive format in /opt/runtipi/images/
-- Creates systemd service to load images on first boot
-- Ensures Runtipi can start without network connectivity
-
-**Build requirements:**
-- `skopeo` is automatically installed in the build environment if not present
-- Skopeo works without a Docker daemon, making it compatible with act and restricted build environments
+```
+stage-halos-base/
+├── 00-install-halos/
+│   └── 00-packages      # halos metapackage
+├── prerun.sh
+└── README.md
+```
 
 ## Services Enabled
 
-After this stage, the following services are enabled but not yet started:
+After this stage, the following services are enabled:
 - **docker.service** - Docker daemon
 - **cockpit.socket** - Cockpit web interface (port 9090)
-- **runtipi.service** - Runtipi container management (port 80)
 
-Services will start on first boot of the Halos system.
+## Dependencies
 
-## Network Requirements
-
-This stage requires network connectivity during the build process to:
-- Download Docker CE packages from download.docker.com
-- Download Cockpit packages from Debian repositories
-- Download runtipi-docker-service from apt.hatlabs.fi
-- Pull Runtipi Docker images from Docker Hub and GitHub Container Registry
-
-After the build is complete, the system can boot and run without network connectivity since all required images are pre-pulled.
+- **stage-hatlabs-common** must run before this stage to add the apt.hatlabs.fi repository
 
 ## Applies To
 
-This stage is included in all Halos image variants:
-- Halos-HALPI2 (desktop)
-- Halos-Lite-HALPI2 (headless)
-- Halos-RPI (desktop, generic Pi)
-- Halos-Lite-RPI (headless, generic Pi)
-- Halos-Marine-* variants (all with additional stage-halos-marine)
-
-## Stage Order
-
-This stage should be run:
-- **After** stage2 (base system is ready)
-- **Before** hardware-specific stages (stage-halpi2-common)
-- **Before** stage3 (if desktop environment is needed)
-- **Before** stage-halos-marine (if marine variant)
-
-Example stage list:
-```
-stage0 stage1 stage2 stage-halos-base stage-halpi2-common stage3 stage-halos-marine
-```
+This stage is included in all HaLOS image variants.
