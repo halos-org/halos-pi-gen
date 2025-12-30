@@ -1,10 +1,29 @@
 #!/bin/bash -e
 
-# Install logo files
-install -m 644 files/cockpit-logo.png "${ROOTFS_DIR}/usr/share/pixmaps/"
+# Copy desktop launchers to user's Desktop directory
+# The .desktop files are installed to /usr/share/applications/ by packages
+# (halos-cockpit-branding, halos-homarr-branding)
 
-# Install desktop launchers to system applications directory
-install -m 644 files/cockpit.desktop "${ROOTFS_DIR}/usr/share/applications/"
+# Create Desktop directory
+install -v -o 1000 -g 1000 -d "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/Desktop"
+
+# List of desktop files to copy
+DESKTOP_FILES=(
+    "cockpit.desktop"
+    "homarr.desktop"
+)
+
+for desktop_file in "${DESKTOP_FILES[@]}"; do
+    src="${ROOTFS_DIR}/usr/share/applications/${desktop_file}"
+    dst="${ROOTFS_DIR}/home/${FIRST_USER_NAME}/Desktop/${desktop_file}"
+
+    if [ -f "${src}" ]; then
+        echo "Copying ${desktop_file} to Desktop"
+        install -m 644 -o 1000 -g 1000 "${src}" "${dst}"
+    else
+        echo "Warning: ${desktop_file} not found in /usr/share/applications/"
+    fi
+done
 
 # Create user's wf-panel-pi config directory
 install -v -o 1000 -g 1000 -d "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/.config"
@@ -17,10 +36,10 @@ if [ -f "${PANEL_CONFIG}" ]; then
     # File exists, validate and update launchers line
     if grep -Eq '^[[:space:]]*launchers[[:space:]]*=' "${PANEL_CONFIG}"; then
         # Update the launchers line, allowing for spaces around '='
-        sed -i -E 's/^([[:space:]]*launchers[[:space:]]*=[[:space:]]*)(.*)$/\1\2 cockpit/' "${PANEL_CONFIG}"
+        sed -i -E 's/^([[:space:]]*launchers[[:space:]]*=[[:space:]]*)(.*)$/\1\2 cockpit homarr/' "${PANEL_CONFIG}"
     else
         # Add launchers line if it does not exist
-        echo "launchers=cockpit" >> "${PANEL_CONFIG}"
+        echo "launchers=cockpit homarr" >> "${PANEL_CONFIG}"
     fi
 else
     # File doesn't exist, install default configuration
