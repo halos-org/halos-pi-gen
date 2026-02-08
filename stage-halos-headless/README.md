@@ -1,8 +1,8 @@
 # Halos Headless Stage
 
-This stage contains configurations specific to headless Halos variants.
+This stage contains default WiFi AP configuration for network access during initial setup.
 
-**Included in:** Headless variants only (not desktop variants with first-boot wizard)
+**Included in:** Headless variants and desktop variants with AP support (e.g., Halos-Desktop-Marine-HALPI2-AP)
 
 ## Network Access for Headless Variants
 
