@@ -22,6 +22,7 @@ Cockpit web management + HALPI2 drivers:
 - `config.halos-desktop-halpi2` → **Halos-Desktop-HALPI2**: Desktop HaLOS for HALPI2
 - `config.halos-marine-halpi2` → **Halos-Marine-HALPI2**: Headless marine HaLOS for HALPI2
 - `config.halos-desktop-marine-halpi2` → **Halos-Desktop-Marine-HALPI2**: Desktop marine HaLOS for HALPI2
+- `config.halos-desktop-marine-halpi2-ap` → **Halos-Desktop-Marine-HALPI2-AP**: Desktop marine HaLOS for HALPI2 with default AP (pre-installation image)
 
 ### HaLOS for Generic Raspberry Pi
 Cockpit web management (no HALPI2-specific drivers):

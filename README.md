@@ -18,12 +18,13 @@ This repository builds both HaLOS images and stock Raspberry Pi OS images with H
 
 | Image | Hardware | Desktop | Marine Stack | Use Case |
 |-------|----------|---------|--------------|----------|
-| **Halos-Marine-HALPI2** | HALPI2 | Yes | Yes | Full marine system with GUI |
-| **Halos-HALPI2** | HALPI2 | Yes | No | General HALPI2 use with GUI |
-| **Halos-Marine-RPI** | Generic Pi | Yes | Yes | Marine system on standard Pi |
-| **Halos-RPI** | Generic Pi | Yes | No | General HaLOS on standard Pi |
+| **Halos-Desktop-Marine-HALPI2-AP** | HALPI2 | Yes | Yes | **Default pre-installation image** with WiFi AP |
+| **Halos-Desktop-Marine-HALPI2** | HALPI2 | Yes | Yes | Desktop marine system |
+| **Halos-Marine-HALPI2** | HALPI2 | No | Yes | Headless marine system |
+| **Halos-Desktop-HALPI2** | HALPI2 | Yes | No | Desktop HaLOS |
+| **Halos-HALPI2** | HALPI2 | No | No | Headless HaLOS |
 
-**Lite variants** (headless, no desktop): Halos-Lite-HALPI2, Halos-Marine-Lite-HALPI2, Halos-Lite-RPI, Halos-Marine-Lite-RPI
+**Generic Raspberry Pi variants** (without HALPI2 drivers): Halos-Desktop-Marine-RPI, Halos-Marine-RPI, Halos-Desktop-RPI, Halos-RPI
 
 ## Downloading
 
