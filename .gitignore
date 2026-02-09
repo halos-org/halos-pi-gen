@@ -3,3 +3,4 @@ artifacts/
 
 # Pi-gen checkout (used during local builds)
 pi-gen/
+CLAUDE.local.md

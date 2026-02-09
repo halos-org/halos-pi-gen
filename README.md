@@ -1,31 +1,130 @@
-# HALPI2 OS Images
+# HaLOS - Hat Labs Operating System
 
-Raspberry Pi OS images customized for the HALPI2 hardware.
+HaLOS is a customized Raspberry Pi OS (Debian Trixie) distribution designed for marine electronics and IoT applications. It provides web-based system management through Cockpit and container app management via a custom app store interface.
 
-The built images include:
-- Raspberry Pi OS Lite with HALPI2 customizations
-- Raspberry Pi OS with Desktop and HALPI2 customizations
-- HaLOS: Containerized Raspberry Pi OS for HALPI2 with common marine applications pre-installed
-- HaLOS-Lite: Containerized Raspberry Pi OS Lite for HALPI2 with common marine applications pre-installed
-- HaLOS-Generic: Containerized Raspberry Pi OS for generic Raspberry Pi hardware with common marine applications pre-installed
-- HaLOS-Generic-Lite: Containerized Raspberry Pi OS Lite for generic Raspberry Pi hardware with common marine applications pre-installed
+This repository builds both HaLOS images and stock Raspberry Pi OS images with HALPI2 hardware customizations.
 
-## Downloading the Images
+> **See also:** [halos-distro](https://github.com/hatlabs/halos-distro) - the main HaLOS development workspace with all related repositories.
 
-The images are available for download on the [releases page](https://github.com/hatlabs/halos/releases).
+## Features
 
-## Flashing the Images
+- **Web-based Management**: Cockpit (port 9090) for system administration, terminal access, and service management
+- **Container App Store**: Install and manage containerized applications through a web UI (port 80)
+- **Marine Software Stack** (marine variants): Pre-configured Signal K, InfluxDB, and Grafana for boat data
+- **HALPI2 Hardware Support**: Native drivers for Hat Labs HALPI2 hardware (CAN bus, RS-485, I2C sensors)
+- **ARM64 Native**: Built for 64-bit Raspberry Pi (Pi 4, Pi 5, CM4, CM5)
 
-The images can be flashed to an SSD drive (or a micro-SD card) using the Raspberry Pi Imager. The Raspberry Pi Imager can be downloaded from the [Raspberry Pi website](https://www.raspberrypi.org/software/). Use an SSD USB adapter to connect the SSD drive to your computer. Open the Raspberry Pi Imager and select the OpenPlotter-HALPI image you downloaded. Select the SSD drive as the target and click Write. Do not apply any customizations.
+## Image Variants
 
-## Building the Images
+| Image | Hardware | Desktop | Marine Stack | Use Case |
+|-------|----------|---------|--------------|----------|
+| **Halos-Desktop-Marine-HALPI2-AP** | HALPI2 | Yes | Yes | **Default pre-installation image** with WiFi AP |
+| **Halos-Desktop-Marine-HALPI2** | HALPI2 | Yes | Yes | Desktop marine system |
+| **Halos-Marine-HALPI2** | HALPI2 | No | Yes | Headless marine system |
+| **Halos-Desktop-HALPI2** | HALPI2 | Yes | No | Desktop HaLOS |
+| **Halos-HALPI2** | HALPI2 | No | No | Headless HaLOS |
 
-The image can be built manually using the [act](https://nektosact.com/) GitHub Actions local runner. You also need Docker installed and running on your computer, and the GH-CLI GitHub command line tool needs to be installed and configured.
+**Generic Raspberry Pi variants** (without HALPI2 drivers): Halos-Desktop-Marine-RPI, Halos-Marine-RPI, Halos-Desktop-RPI, Halos-RPI
 
-With the prerequisites in place, run the following commands to build the image:
+## Downloading
+
+Pre-built images are available on the [GitHub Releases page](https://github.com/hatlabs/halos-pi-gen/releases).
+
+## Flashing
+
+1. Download [Raspberry Pi Imager](https://www.raspberrypi.org/software/)
+2. Connect your SSD/SD card via USB adapter
+3. In Raspberry Pi Imager:
+   - Choose "Use custom" and select the downloaded `.img.xz` file
+   - Select your target drive
+   - Add any customizations (hostname, SSH, WiFi) if you want to pre-configure e.g. WiFi access
+4. Click "Write" and wait for completion
+
+## First Boot
+
+After flashing and booting:
+
+1. **Connect to your network** via Ethernet (recommended) or configure WiFi
+2. **Find the device IP** using your router's admin page or `ping halos.local`
+3. **Access the web interfaces**:
+   - **Cockpit**: `https://<ip>:9090` - System administration
+
+### Default Credentials
+
+- **Username**: `pi`
+- **Password**: `raspberry`
+
+> **Security Note**: Change the default password immediately after first login via Cockpit.
+
+## Building from Source
+
+### Requirements
+
+- Docker installed and running
+- ~20GB free disk space per image variant
+- ARM64 host recommended (or use emulation)
+
+### Build Commands
 
 ```bash
-./run docker-build
+# Clone the repository
+git clone https://github.com/hatlabs/halos-pi-gen.git
+cd halos-pi-gen
+
+# Build a specific variant
+./run docker-build "Halos-Marine-HALPI2"
+
+# Build all variants
+./run docker-build-all
+
+# Clean up Docker resources
+./run docker-clean
 ```
 
-This command will mimic the GitHub Actions workflow and build the images locally. The image files are stored in the `artifacts` directory. All artifacts are zip files that can be extracted to get the `xz` compressed image files. The image can then be flashed to an SSD drive or SD card using the Raspberry Pi Imager as described above.
+### Local CI Testing
+
+For testing the full CI workflow locally using [act](https://nektosact.com/):
+
+```bash
+# Install act (macOS)
+brew install act
+
+# Run PR workflow locally
+act pull_request --container-architecture linux/arm64
+```
+
+### Build Output
+
+Built images are placed in the `deploy/` directory:
+- `<variant>-<date>.img.xz` - Compressed disk image
+- `<variant>-<date>.img.xz.sha256` - Checksum file
+
+## Project Structure
+
+```
+halos-pi-gen/
+├── config.*                    # Image variant configurations
+├── stage-halos-base/           # Cockpit + app store (all variants)
+├── stage-halpi2-common/        # HALPI2 hardware drivers
+├── stage-halos-marine/         # Marine software stack
+├── .github/workflows/          # CI/CD pipelines
+└── run                         # Build script
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request
+
+Pull requests trigger automatic image builds for testing.
+
+## License
+
+See [LICENSE](LICENSE) for details.
+
+## Related Projects
+
+- [halos-marine-containers](https://github.com/hatlabs/halos-marine-containers) - Marine app definitions
+- [cockpit-apt](https://github.com/hatlabs/cockpit-apt) - Container app store UI
+- [apt.hatlabs.fi](https://apt.hatlabs.fi) - Hat Labs APT repository
