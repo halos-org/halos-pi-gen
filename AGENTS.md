@@ -50,6 +50,7 @@ Pi-gen uses stages (run in order). Custom HaLOS stages:
 
 - **stage-halos-base**: Cockpit + Docker (all variants)
 - **stage-halpi2-common**: HALPI2 hardware drivers, firmware, interfaces
+- **stage-halpi2-marine**: HALPI2-specific marine hardware setup (GNSS HAT, UART)
 - **stage-halos-marine**: Marine stack (marine app store, preinstalled marine apps)
 
 **Files:** `stage-*/` directories contain numbered tasks (00-, 01-, 02-). Each task can have: `00-run.sh` (host), `01-run-chroot.sh` (chroot), `00-packages` (apt packages), `files/` (config files).
@@ -57,7 +58,7 @@ Pi-gen uses stages (run in order). Custom HaLOS stages:
 **Config:** Each `config.*` file defines IMG_NAME, STAGE_LIST, compression. Example:
 ```bash
 IMG_NAME="Halos-Marine-HALPI2"
-STAGE_LIST="stage0 stage1 stage2 stage-halos-base stage-halpi2-common stage3 stage-halos-marine"
+STAGE_LIST="stage0 stage1 stage2 stage-common stage-halpi2-common stage-halos-base stage-halpi2-marine stage-halos-marine stage-halos-headless stage-export"
 ```
 
 ## CI/CD
