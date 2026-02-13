@@ -9,7 +9,7 @@ ConditionPathExists=/usr/sbin/NetworkManager
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/restrict-preconfigured-wifi.sh
+ExecStart=/usr/libexec/halos/restrict-preconfigured-wifi.sh
 RemainAfterExit=yes
 
 [Install]

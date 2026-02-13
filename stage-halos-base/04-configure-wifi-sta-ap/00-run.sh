@@ -11,8 +11,9 @@
 echo "Installing WiFi STA+AP mode support..."
 
 # Install the restriction script
+install -d "${ROOTFS_DIR}/usr/libexec/halos"
 install -m 755 files/restrict-preconfigured-wifi.sh \
-    "${ROOTFS_DIR}/usr/local/bin/restrict-preconfigured-wifi.sh"
+    "${ROOTFS_DIR}/usr/libexec/halos/restrict-preconfigured-wifi.sh"
 
 # Install the systemd service
 install -m 644 files/restrict-preconfigured-wifi.service \
