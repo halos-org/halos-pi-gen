@@ -1,0 +1,14 @@
+[Unit]
+Description=Configure u-blox GNSS receiver for marine use
+Before=gpsd.service
+After=dev-ttyAMA0.device
+ConditionPathExists=!/var/lib/halos/gnss-marine-configured
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/halos/configure-gnss-marine.sh
+TimeoutStartSec=60
+
+[Install]
+WantedBy=multi-user.target
