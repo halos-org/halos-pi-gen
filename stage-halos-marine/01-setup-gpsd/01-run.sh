@@ -1,8 +1,8 @@
 #!/bin/bash -e
 
-# Collect devices from drop-in directory (created by 00-setup-gnss-hat if present)
+# Collect devices registered by earlier stages (e.g., stage-halpi2-marine)
 DEVICES=""
-DEVICES_DIR="${ROOTFS_DIR}/etc/halos/gpsd-devices.d"
+DEVICES_DIR="${WORK_DIR}/gpsd-devices"
 if [ -d "${DEVICES_DIR}" ]; then
     for f in "${DEVICES_DIR}"/*; do
         [ -f "$f" ] || continue
@@ -11,6 +11,7 @@ if [ -d "${DEVICES_DIR}" ]; then
             DEVICES="${DEVICES} ${device}"
         done < "$f"
     done
+    rm -rf "${DEVICES_DIR}"
 fi
 DEVICES="${DEVICES# }"  # Trim leading space
 
