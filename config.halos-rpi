@@ -1,6 +1,6 @@
 IMG_NAME="Halos-RPI"
 PI_GEN_RELEASE="HaLOS RPI"
-PI_GEN_REPO="https://github.com/hatlabs/halos-pi-gen"
+PI_GEN_REPO="https://github.com/halos-org/halos-pi-gen"
 IMG_DATE=$(cat VERSION)
 STAGE_LIST="stage0 stage1 stage2 stage-common stage-halos-base stage-halos-headless stage-export"
 DEPLOY_COMPRESSION="xz"

@@ -11,7 +11,7 @@
 # The SSID is generated at first boot with format "Halos-XXXX" where XXXX is
 # the last 4 hex digits of the wlan0 MAC address, making it unique per device.
 #
-# Related: https://github.com/hatlabs/halos-pi-gen/issues/26
+# Related: https://github.com/halos-org/halos-pi-gen/issues/26
 
 echo "Installing default WiFi AP..."
 

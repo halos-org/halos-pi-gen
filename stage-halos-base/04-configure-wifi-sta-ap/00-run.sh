@@ -6,7 +6,7 @@
 # WiFi connection to wlan0 only, preventing it from racing to grab
 # virtual AP interfaces (wlan0ap) when they are created.
 #
-# Related: https://github.com/hatlabs/halos-pi-gen/issues/26
+# Related: https://github.com/halos-org/halos-pi-gen/issues/26
 
 echo "Installing WiFi STA+AP mode support..."
 
