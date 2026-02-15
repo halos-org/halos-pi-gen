@@ -4,7 +4,7 @@ HaLOS is a customized Raspberry Pi OS (Debian Trixie) distribution designed for 
 
 This repository builds both HaLOS images and stock Raspberry Pi OS images with HALPI2 hardware customizations.
 
-> **See also:** [halos-distro](https://github.com/halos-org/halos-distro) - the main HaLOS development workspace with all related repositories.
+> **See also:** [halos](https://github.com/halos-org/halos) - the main HaLOS development workspace with all related repositories.
 
 ## Features
 
