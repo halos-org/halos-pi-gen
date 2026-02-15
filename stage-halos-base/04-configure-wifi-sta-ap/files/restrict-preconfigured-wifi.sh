@@ -10,7 +10,7 @@
 #
 # This script runs before NetworkManager starts on first boot.
 #
-# Related: https://github.com/hatlabs/halos-pi-gen/issues/26
+# Related: https://github.com/halos-org/halos-pi-gen/issues/26
 
 set -e
 

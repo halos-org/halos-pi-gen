@@ -4,7 +4,7 @@ HaLOS is a customized Raspberry Pi OS (Debian Trixie) distribution designed for 
 
 This repository builds both HaLOS images and stock Raspberry Pi OS images with HALPI2 hardware customizations.
 
-> **See also:** [halos-distro](https://github.com/hatlabs/halos-distro) - the main HaLOS development workspace with all related repositories.
+> **See also:** [halos-distro](https://github.com/halos-org/halos-distro) - the main HaLOS development workspace with all related repositories.
 
 ## Features
 
@@ -28,7 +28,7 @@ This repository builds both HaLOS images and stock Raspberry Pi OS images with H
 
 ## Downloading
 
-Pre-built images are available on the [GitHub Releases page](https://github.com/hatlabs/halos-pi-gen/releases).
+Pre-built images are available on the [GitHub Releases page](https://github.com/halos-org/halos-pi-gen/releases).
 
 ## Flashing
 
@@ -68,7 +68,7 @@ After flashing and booting:
 
 ```bash
 # Clone the repository
-git clone https://github.com/hatlabs/halos-pi-gen.git
+git clone https://github.com/halos-org/halos-pi-gen.git
 cd halos-pi-gen
 
 # Build a specific variant
@@ -125,6 +125,6 @@ See [LICENSE](LICENSE) for details.
 
 ## Related Projects
 
-- [halos-marine-containers](https://github.com/hatlabs/halos-marine-containers) - Marine app definitions
-- [cockpit-apt](https://github.com/hatlabs/cockpit-apt) - Container app store UI
+- [halos-marine-containers](https://github.com/halos-org/halos-marine-containers) - Marine app definitions
+- [cockpit-apt](https://github.com/halos-org/cockpit-apt) - Container app store UI
 - [apt.hatlabs.fi](https://apt.hatlabs.fi) - Hat Labs APT repository
