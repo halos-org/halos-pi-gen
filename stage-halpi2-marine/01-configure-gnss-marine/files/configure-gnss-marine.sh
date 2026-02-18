@@ -60,8 +60,8 @@ configure_device() {
     done
 
     if [ -z "$current_baud" ]; then
-        echo "ERROR: No response from $device — skipping"
-        return 1
+        echo "No receiver detected on $device — skipping"
+        return 2
     fi
 
     echo "Receiver responded at ${current_baud} bps"
@@ -104,16 +104,28 @@ if [ -z "$uart_devices" ]; then
     exit 0
 fi
 
-all_ok=true
+any_found=false
+any_failed=false
 for device in $uart_devices; do
-    configure_device "$device" || all_ok=false
+    rc=0
+    configure_device "$device" || rc=$?
+    case $rc in
+        0) any_found=true ;;
+        2) ;;  # no receiver on this device
+        *) any_found=true; any_failed=true ;;
+    esac
 done
 
-if [ "$all_ok" = true ]; then
-    mkdir -p "$(dirname "$MARKER_FILE")"
-    touch "$MARKER_FILE"
-    echo "All GNSS receivers configured successfully"
-else
-    echo "WARNING: Some receivers failed — will retry on next boot"
+mkdir -p "$(dirname "$MARKER_FILE")"
+
+if [ "$any_failed" = true ]; then
+    echo "WARNING: Some receivers failed configuration — will retry on next boot"
     exit 1
 fi
+
+if [ "$any_found" = false ]; then
+    echo "No GNSS receivers detected — nothing to configure"
+fi
+
+touch "$MARKER_FILE"
+echo "GNSS configuration complete"
