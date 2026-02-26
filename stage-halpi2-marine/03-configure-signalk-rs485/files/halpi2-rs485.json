@@ -1,0 +1,17 @@
+{
+  "id": "halpi2-rs485",
+  "pipeElements": [
+    {
+      "type": "providers/serialport",
+      "options": {
+        "device": "/dev/ttyAMA4",
+        "baudrate": 4800,
+        "toStdout": "nmea0183out"
+      }
+    },
+    {
+      "type": "providers/nmea0183-signalk"
+    }
+  ],
+  "enabled": true
+}
