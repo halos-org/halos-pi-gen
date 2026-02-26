@@ -1,0 +1,11 @@
+[Unit]
+Description=Set Signal K CAN interface unique number
+Before=marine-signalk-server-container.service
+ConditionPathExists=/usr/libexec/halos/set-signalk-can-unique-number.sh
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/halos/set-signalk-can-unique-number.sh
+
+[Install]
+WantedBy=multi-user.target
