@@ -6,38 +6,27 @@
 
 SETTINGS="${ROOTFS_DIR}/var/lib/container-apps/marine-signalk-server-container/data/data/settings.json"
 
-python3 -c "
-import json, sys
-
-with open(sys.argv[1]) as f:
-    settings = json.load(f)
-
-provider = {
-    'id': 'halpi2-nmea2000',
-    'pipeElements': [
-        {
-            'type': 'providers/simple',
-            'options': {
-                'logging': False,
-                'type': 'NMEA2000',
-                'subOptions': {
-                    'type': 'canbus-canboatjs',
-                    'interface': 'can0',
-                    'uniqueNumber': 0
-                }
-            }
+# Add provider only if not already present (idempotent)
+if ! jq -e '.pipedProviders[] | select(.id == "halpi2-nmea2000")' "${SETTINGS}" >/dev/null 2>&1; then
+  jq '.pipedProviders += [{
+    "id": "halpi2-nmea2000",
+    "pipeElements": [
+      {
+        "type": "providers/simple",
+        "options": {
+          "logging": false,
+          "type": "NMEA2000",
+          "subOptions": {
+            "type": "canbus-canboatjs",
+            "interface": "can0",
+            "uniqueNumber": 0
+          }
         }
+      }
     ],
-    'enabled': True
-}
-
-if not any(p.get('id') == 'halpi2-nmea2000' for p in settings['pipedProviders']):
-    settings['pipedProviders'].append(provider)
-
-with open(sys.argv[1], 'w') as f:
-    json.dump(settings, f, indent=2)
-    f.write('\n')
-" "${SETTINGS}"
+    "enabled": true
+  }]' "${SETTINGS}" > "${SETTINGS}.tmp" && mv "${SETTINGS}.tmp" "${SETTINGS}"
+fi
 
 # Install first-boot script to randomize the NMEA 2000 unique number
 install -m 755 files/set-signalk-can-unique-number.sh \
