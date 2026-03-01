@@ -61,9 +61,9 @@ IMG_NAME="Halos-Marine-HALPI2"
 STAGE_LIST="stage0 stage1 stage2 stage-common stage-halpi2-common stage-halos-base stage-halpi2-marine stage-halos-marine stage-halos-headless stage-export"
 ```
 
-## Remote Flashing
+## Flashing
 
-Extracted to standalone tool: [hatlabs/flash-live-remote](https://github.com/hatlabs/flash-live-remote)
+Extracted to standalone tool: [hatlabs/flash-live-system](https://github.com/hatlabs/flash-live-system)
 
 ## CI/CD
 
