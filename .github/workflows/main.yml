@@ -103,6 +103,7 @@ jobs:
           sudo apt-get autoremove -y
           sudo apt-get autoclean
           sudo rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*
+          sudo rm -rf /usr/local/.ghcup /usr/share/miniconda /usr/lib/jvm
           echo "=== Disk space after cleanup ==="
           df -h /
 
@@ -136,6 +137,10 @@ jobs:
           touch pi-gen/stage5/SKIP
           touch pi-gen/stage{2,4}/SKIP_IMAGES
           cp ${{ matrix.config }} pi-gen/config
+
+          # Delete previous stage rootfs after copy to save disk space
+          sed -i '/rsync -aHAXx/a\    rm -rf "${PREV_ROOTFS_DIR}"' pi-gen/scripts/common
+
           cd pi-gen
           sudo RELEASE='${{ matrix.release }}' GIT_HASH=${{ github.sha }} IMG_FILENAME=${{ env.IMG_FILENAME }} ARCHIVE_FILENAME=${{ env.IMG_FILENAME }} ./build-docker.sh
 
