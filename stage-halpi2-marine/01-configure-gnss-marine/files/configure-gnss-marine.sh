@@ -9,7 +9,9 @@ TARGET_BAUD=115200
 TARGET_RATE=100      # ms = 10 Hz
 TARGET_MODEL=5       # Sea
 DEFAULT_PROTVER=18
-UBXTOOL_WAIT=4       # seconds
+UBXTOOL_WAIT=2       # seconds
+MAX_ATTEMPTS=3       # "no receiver" boots before giving up
+ATTEMPT_FILE="/var/lib/halos/gnss-marine-attempts"
 
 get_uart_devices() {
     if [ ! -f "$GPSD_DEFAULTS" ]; then
@@ -100,6 +102,7 @@ uart_devices=$(get_uart_devices)
 if [ -z "$uart_devices" ]; then
     echo "No UART GNSS devices found — nothing to configure"
     mkdir -p "$(dirname "$MARKER_FILE")"
+    rm -f "$ATTEMPT_FILE"
     touch "$MARKER_FILE"
     exit 0
 fi
@@ -124,8 +127,23 @@ if [ "$any_failed" = true ]; then
 fi
 
 if [ "$any_found" = false ]; then
-    echo "No GNSS receivers detected — nothing to configure"
+    attempts=0
+    if [ -f "$ATTEMPT_FILE" ]; then
+        attempts=$(cat "$ATTEMPT_FILE")
+    fi
+    attempts=$((attempts + 1))
+    echo "$attempts" > "$ATTEMPT_FILE"
+
+    if [ "$attempts" -ge "$MAX_ATTEMPTS" ]; then
+        echo "No GNSS receivers detected after $attempts boots — giving up"
+        touch "$MARKER_FILE"
+        exit 0
+    fi
+
+    echo "No GNSS receivers detected (attempt $attempts/$MAX_ATTEMPTS) — will retry next boot"
+    exit 1
 fi
 
+rm -f "$ATTEMPT_FILE"
 touch "$MARKER_FILE"
 echo "GNSS configuration complete"
