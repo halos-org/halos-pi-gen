@@ -9,3 +9,17 @@ jobs:
     uses: halos-org/shared-workflows/.github/workflows/pr-checks.yml@main
     with:
       skip-lintian: true
+
+  image-version-check:
+    name: Image version bump check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check version bump
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: .github/scripts/check-version-bump.sh "${{ github.event.pull_request.base.ref }}"
