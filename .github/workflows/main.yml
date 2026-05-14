@@ -17,6 +17,11 @@ concurrency:
 jobs:
   image-builder:
     name: "${{ matrix.name }}"
+    # Manual triggers are restricted to non-main branches so the main image
+    # set stays uniquely identifiable by VERSION. Re-runs against main without
+    # a VERSION bump would produce two semantically-different images sharing
+    # the same filename — see CLAUDE.md / AGENTS.md on the bumpversion policy.
+    if: github.event_name != 'workflow_dispatch' || github.ref != 'refs/heads/main'
     runs-on: ubuntu-24.04-arm
     strategy:
       fail-fast: false
