@@ -17,3 +17,13 @@ and use `http://*.localhost/` URLs which Traefik redirects to the proper `https:
 **Panel Configuration Behavior:**
 - If `wf-panel-pi.ini` already exists (user has customized panel), appends Cockpit and Homarr to the end of existing launchers
 - If `wf-panel-pi.ini` doesn't exist, installs default configuration with standard launchers plus Cockpit and Homarr
+
+### 01-set-autologin
+
+Configures lightdm for autologin to the default user.
+
+### 02-install-halpi2-desktop
+
+On HALPI2 builds (detected via `dpkg -l halos-halpi2`), installs `halos-halpi2-desktop`, which transitively pulls in `halos-halpi-desktop-branding` as the resolved provider of the virtual `halos-desktop-wallpaper`. Generic desktop builds skip this and keep the alphabetically-resolved generic provider `halos-desktop-branding`.
+
+Mirrors the `dpkg -l` check pattern in `stage-halos-marine/02-install-combination-metapackage/`.
