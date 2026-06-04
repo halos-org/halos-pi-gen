@@ -268,6 +268,7 @@ jobs:
           EOF
 
       - name: 📦 Create draft GitHub Release
+        id: create_release
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -276,3 +277,45 @@ jobs:
           body_path: release_notes.md
           files: all-artifacts/*
           draft: true
+
+      # The upload action can report success while attaching a truncated asset
+      # (observed: two >1 GB images landed ~0.5 GB short with a green tick).
+      # Compare each attached asset's size against its source file and fail the
+      # release if any differ, so corruption never reaches a published image.
+      - name: ✅ Verify attached asset sizes
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const dir = 'all-artifacts';
+
+            const assets = await github.paginate(github.rest.repos.listReleaseAssets, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: ${{ steps.create_release.outputs.id }},
+              per_page: 100,
+            });
+            const attached = new Map(assets.map(a => [a.name, a.size]));
+
+            const mismatches = [];
+            for (const name of fs.readdirSync(dir)) {
+              const local = fs.statSync(path.join(dir, name));
+              if (!local.isFile()) continue;
+              const remote = attached.get(name);
+              if (remote === undefined) {
+                mismatches.push(`${name}: not attached to release`);
+              } else if (remote !== local.size) {
+                mismatches.push(`${name}: source ${local.size} B, attached ${remote} B`);
+              } else {
+                core.info(`✓ ${name} (${local.size} B)`);
+              }
+            }
+
+            if (mismatches.length) {
+              core.setFailed(
+                'Release asset verification failed — attached sizes do not match source:\n' +
+                mismatches.join('\n')
+              );
+            }
