@@ -1,3 +1,9 @@
 [all]
+# HALPI2 onboard CAN controller (MCP2518FD).
 dtoverlay=spi0-2cs,cs1_pin=6
 dtoverlay=mcp251xfd,spi0-1,interrupt=26,oscillator=40000000
+
+# Waveshare RS485 CAN HAT CAN controller (MCP2515).  The HAT uses SPI0 CE0,
+# GPIO25 for its interrupt, and a 12 MHz oscillator.  The existing HALPI2
+# controller remains can0; this additional controller is registered as can1.
+dtoverlay=mcp2515,spi0-0,oscillator=12000000,interrupt=25,speed=2000000
